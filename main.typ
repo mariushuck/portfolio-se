@@ -7,7 +7,7 @@
     (name: "Moritz Glück", student-id: "7654321", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Marius Huck", student-id: "3391238", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Felix Mehler", student-id: "7654321", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
-    (name: "Selina Wahl", student-id: "7654321", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik")
+    (name: "Celina Wahl", student-id: "6532414", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik")
   ),
   
   type-of-thesis: "Portfolioprüfung",
