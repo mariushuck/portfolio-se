@@ -6,7 +6,7 @@
   authors: (
     (name: "Moritz Glück", student-id: "7654321", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Marius Huck", student-id: "3391238", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
-    (name: "Felix Mehler", student-id: "7654321", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
+    (name: "Felix Mehler", student-id: "8564068", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Celina Wahl", student-id: "6532414", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik")
   ),
   
@@ -109,6 +109,16 @@ Das System folgt dem MVP-Muster, um Präsentationslogik strikt von der Darstellu
 - *Der Presenter als Dialogkern*: Der `ChatPresenter` bildet den Dialogkern. Er steuert die Interaktionen und kommuniziert mit dem Model.
 - *Die Passive View*: Die Benutzeroberfläche ist als „Passive View“ realisiert. Sie definiert lediglich eine Schnittstelle (`ChatView`), über die der Presenter Daten übergibt.
 - *Schnittstellenbasierte Trennung*: Der Presenter arbeitet ausschließlich gegen das Interface `ChatView`, was den Dialogkern technikneutral macht.
+
+= Einblick in den Interaktionsablauf beim Versand einer Chat-Nachricht
+
+Um ein besseres Verständnis für die Funktionsweise der bereits benannten Architekturmodelle und Design-Pattern zu erhalten, wurde das Versenden einer Nachricht von einem Client an einen weiteren Client modelliert.
+
+ Im Folgenden wird der Ablauf des sich im Anhang befindlichen Sequenzdiagramm wiedergegeben.  Zur Vorbereitung des Programmablaufs muss ein Server aufgesetzt sein sowie zwei Clients, welche zudem bei dem Server registriert sind. 
+
+Client A, Absender der Nachricht, befindet sich auf der Chatoberfläche. Dabei befindet sich dieser in der Klasse `ChatWindow`. Von welcher er Nachrichten an den Empfänger Client E abschicken kann. Bei betätigen des Senden-Buttons in der GUI wird die Methode `onMessageTextAreaEnter()` ausgeführt. Diese Methode führt wiederum die Methode `call()` aus, welche den Inhalt des Textfeldes an die Klasse `ChatPresenter` übermittelt. `ChatPresenter` ruft ihre private Methode `sendChatMessage()` auf. Diese Methode erzeug ein `ChatMessage`-Objekt mit dem Inhalt der Nachricht und der Empfänger-ID und postet dieses anschließend als `SendChatMessageEvent`. Der `SocketClient` des Clients A, der auf dieses Event reagiert, führt einen Request an den Server durch. Dabei übergibt der Socket das `ChatMessage`-Objekt sowie einen Request-Code mit dem Hinweis ChatMessage. Auf der Serverseite wird durch den `SocketWorker` die Request angenommen und ein `RequestReservedEvent`-Objekt erzeugt, welches gepostet wird. Der `RequestRouter` reagiert auf dieses Event. Er erzeugt in der Klasse `RequestHandlerFactory` ein neues `RequestHandler`-Objekt in Abhängigkeit des Hinweises, welchere durch den Client A mit übermittelt wurde. Anschließend übergibt der `RequestRouter` das Event mit der Methode `handle()` an die Klasse `ChatMessageRequestHandler`, die durch die Factory-Klasse erzeugt wurde. Der Server erzeugt in dieser Klasse ein `ForwardChatMessageEvent`-Objekt und postet es. Dieses Objekt besteht aus der Chatnachricht, der Sender-ID und der Empfänger-ID. Dadurch landen die Daten wieder bei dem `SocketWorker` des Servers. Dieser reagiert auf das Event und verarbeitet die Daten um sie anschließend an den Client E mit Hilfe der Methode `response()` zu schicken. Der Client E verarbeitet die Antwort in seiner `SocketClient`-Klasse. Von dort aus wird die Antwort des Servers an die Klasse `ChatMessageResponseHandler` weitergeleitet. Diese wandelt die Antwort wieder in ein `ChatMessage`-Objekt um, um es anschließend an die Klasse `ChattingManagerImpl` zu übergeben. Mit Hilfe eines Events landet die Antwort zum Schluss bei der Klasse `ChatPresenter` und wird somit dem Client E angezeigt. 
+
+
 
 = Fazit
 
