@@ -89,35 +89,36 @@ Die Komponentendiagramme stellen bewusst eine *abstrahierte Sicht* dar, um Veran
 
 = Identifikation von Design Pattern
 
-In diesem Kapitel werden die im System identifizierten Entwurfsmuster detailliert beschrieben. Diese dienen der schrittweisen hierarchischen Verfeinerung der Architektur.
+In diesem Kapitel werden die im System identifizierten Entwurfsmuster detailliert beschrieben. Diese dienen der schrittweisen hierarchischen Verfeinerung der Architektur und gewährleisten eine saubere Trennung von Zuständigkeiten.
 
 == Creational Pattern: Factory Method
 
-#image("/assets/Factory.svg", width: 25%)
+#image("/assets/Factory.svg", width: 35%)
 
-Das System setzt Fabrikmuster ein, um die Instanziierung von Objekten zu zentralisieren und vom restlichen Code zu entkoppeln.
+Das System setzt das Fabrikmuster (Factory Method) ein, um die Instanziierung von Objekten zu zentralisieren und den aufrufenden Code von konkreten Implementierungen zu entkoppeln.
 
-- *Zentrale Handler-Erzeugung*: In den Klassen `ResponseHandlerFactory` (Client) und `RequestHandlerFactory` (Server) wird anhand eines Typs (z. B. `RequestCode`) entschieden, welcher konkrete Handler erzeugt wird. Dadurch muss die Netzwerkkomponente die konkreten Handler-Klassen nicht kennen.
-- *Abstraktion der UI-Technologie*: Die `ViewFactory` definiert eine Schnittstelle zur Erzeugung aller Fenster. Konkrete Implementierungen wie `JavaFxViewFactory` liefern plattformspezifische Objekte zurück, was den Austausch der UI-Technologie ohne Änderung der Presenter ermöglicht.
+- *Zentrale Handler-Erzeugung (Open-Closed Principle)*: Die Klassen `ResponseHandlerFactory` (Client) und `RequestHandlerFactory` (Server) kapseln die Logik zur Objekterzeugung. Anhand eines Typs (z. B. `RequestCode`) wird dynamisch entschieden, welcher konkrete Handler erzeugt wird. Dies erlaubt es, das System um neue Funktionen zu erweitern, ohne die bestehende Netzwerkkomponente modifizieren zu müssen.
+- *Abstraktion der UI-Technologie*: Die `ViewFactory` definiert eine abstrakte Schnittstelle zur Erzeugung aller UI-Komponenten. Die konkrete `JavaFxViewFactory` liefert plattformspezifische Objekte zurück. Da die Presenter ausschließlich gegen das Interface der Factory arbeiten, bleibt die Anwendungslogik unabhängig von der zugrunde liegenden Grafikbibliothek (z. B. JavaFX, Swing oder fiktive Web-UIs).
 
 == Behavioral Pattern: Observer (Event-Bus)
 
-#image("/assets/Behavioral.svg", width: 50%)
+#image("/assets/Behavioral.svg", width: 80%)
 
-Zur Kommunikation zwischen den entkoppelten Komponenten wird eine ereignisbasierte Architektur genutzt, die auf dem Google Guava `EventBus` basiert.
+Zur Kommunikation zwischen den entkoppelten Komponenten wird eine ereignisbasierte Architektur genutzt, die auf dem Google Guava `EventBus` basiert. Dies stellt eine moderne Implementierung des Observer-Musters dar.
 
-- *Ereignisgesteuerter Nachrichtenfluss*: Wenn der `SocketClient` eine Nachricht empfängt, wird ein `ChatMessageReceivedEvent` auf den Bus gepostet.
-- *Lose Kopplung*: Komponenten wie der `ChatPresenter` registrieren sich via `@Subscribe` für spezifische Ereignisse. Der Sender benötigt keine Referenz auf den Empfänger, was die Modularität erhöht und einen „Big Ball of Mud“ verhindert.
+- *Ereignisgesteuerter Nachrichtenfluss*: Sobald der `SocketClient` ein Datenpaket empfängt, wird dieses in ein Event-Objekt (z. B. `ChatMessageReceivedEvent`) transformiert und auf den Bus gepostet. Der Sender kennt dabei weder die Anzahl noch die Art der Empfänger.
+- *Lose Kopplung und Modularität*: Komponenten wie der `ChatPresenter` registrieren sich mittels der `@Subscribe`-Annotation für spezifische Ereignisse. Diese lose Kopplung verhindert eine starre Objekt-Hierarchie (Vermeidung eines „Big Ball of Mud“) und ermöglicht es, neue Funktionalitäten (wie Logging oder Statistik-Module) einfach als weitere Subscriber hinzuzufügen, ohne den bestehenden Code zu beeinflussen.
 
 == Architectural Pattern: Model-View-Presenter (MVP)
 
-#image("/assets/Architectural.svg", width: 50%)
+#image("/assets/Architectural.svg", width: 80%)
 
-Das System folgt dem MVP-Muster, um Präsentationslogik strikt von der Darstellung zu trennen.
+Das System folgt dem MVP-Muster, um die Präsentationslogik strikt von der visuellen Darstellung zu trennen. Dies bietet ein Höchstmaß an Flexibilität bei der Wahl der UI-Technologie.
 
-- *Der Presenter als Dialogkern*: Der `ChatPresenter` bildet den Dialogkern. Er steuert die Interaktionen und kommuniziert mit dem Model.
-- *Die Passive View*: Die Benutzeroberfläche ist als „Passive View“ realisiert. Sie definiert lediglich eine Schnittstelle (`ChatView`), über die der Presenter Daten übergibt.
-- *Schnittstellenbasierte Trennung*: Der Presenter arbeitet ausschließlich gegen das Interface `ChatView`, was den Dialogkern technikneutral macht.
+- *Der Presenter als Dialogkern*: Der `ChatPresenter` fungiert als zentraler Koordinator. Er verarbeitet die vom Event-Bus eingehenden Daten, bereitet sie für die Anzeige auf und reagiert auf Benutzereingaben der View.
+- *Die Passive View*: Die Benutzeroberfläche ist konsequent als „Passive View“ realisiert. Das bedeutet, die View (z. B. `ChatViewImpl`) enthält keinerlei Programmlogik, sondern bietet lediglich Methoden zur Manipulation der UI-Elemente an.
+- *Technologieneutralität (Swing/JavaFX)*: Da der Presenter ausschließlich über das Interface `ChatView` kommuniziert, ist der Dialogkern vollständig von der Framework-Implementierung entkoppelt. Dies ermöglicht es, die grafische Oberfläche wahlweise mit **JavaFX** oder **Swing** umzusetzen (oder zwischen diesen zu wechseln), ohne eine einzige Zeile Code im Presenter oder im Model ändern zu müssen. 
+- *Testbarkeit*: Durch die Entkopplung kann die gesamte Dialoglogik in Unit-Tests geprüft werden, indem die View durch ein Mock-Objekt ersetzt wird. Dadurch sind automatisierte Tests ohne eine aktive grafische Oberfläche möglich.
 
 = Einblick in den Interaktionsablauf beim Versand einer Chat-Nachricht
 
