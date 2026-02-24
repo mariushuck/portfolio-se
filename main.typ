@@ -4,7 +4,7 @@
 #show: clean-dhbw.with(
   title: "Re-Engineering und Architekturanalyse eines Chat-Socket-Systems",
   authors: (
-    (name: "Moritz Glück", student-id: "7654321", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
+    (name: "Moritz Glück", student-id: "7848413", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Marius Huck", student-id: "3391238", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Felix Mehler", student-id: "8564068", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik"),
     (name: "Celina Wahl", student-id: "6532414", course: "WWI24B2", course-of-studies: "Wirtschaftsinformatik")
@@ -117,7 +117,7 @@ Das System folgt dem MVP-Muster, um die Präsentationslogik strikt von der visue
 
 - *Der Presenter als Dialogkern*: Der `ChatPresenter` fungiert als zentraler Koordinator. Er verarbeitet die vom Event-Bus eingehenden Daten, bereitet sie für die Anzeige auf und reagiert auf Benutzereingaben der View.
 - *Die Passive View*: Die Benutzeroberfläche ist konsequent als „Passive View“ realisiert. Das bedeutet, die View (z. B. `ChatViewImpl`) enthält keinerlei Programmlogik, sondern bietet lediglich Methoden zur Manipulation der UI-Elemente an.
-- *Technologieneutralität (Swing/JavaFX)*: Da der Presenter ausschließlich über das Interface `ChatView` kommuniziert, ist der Dialogkern vollständig von der Framework-Implementierung entkoppelt. Dies ermöglicht es, die grafische Oberfläche wahlweise mit **JavaFX** oder **Swing** umzusetzen (oder zwischen diesen zu wechseln), ohne eine einzige Zeile Code im Presenter oder im Model ändern zu müssen. 
+- *Technologieneutralität (Swing/JavaFX)*: Da der Presenter ausschließlich über das Interface `ChatView` kommuniziert, ist der Dialogkern vollständig von der Framework-Implementierung entkoppelt. Dies ermöglicht es, die grafische Oberfläche wahlweise mit *JavaFX* oder *Swing* umzusetzen (oder zwischen diesen zu wechseln), ohne eine einzige Zeile Code im Presenter oder im Model ändern zu müssen. 
 - *Testbarkeit*: Durch die Entkopplung kann die gesamte Dialoglogik in Unit-Tests geprüft werden, indem die View durch ein Mock-Objekt ersetzt wird. Dadurch sind automatisierte Tests ohne eine aktive grafische Oberfläche möglich.
 
 = Einblick in den Interaktionsablauf beim Versand einer Chat-Nachricht
