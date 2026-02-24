@@ -32,7 +32,7 @@ Das analysierte System "chat-socket" ist eine in Java realisierte Client-Server-
 
 = Erläuterung der Komponentendiagramme
 
-= Gesamtüberblick der Systemarchitektur
+== Gesamtüberblick der Systemarchitektur
 
 Das System ist als klassisches *Client-Server-System* mit TCP-Socket-Kommunikation aufgebaut. Sowohl Client als auch Server sind in logisch getrennte Komponenten gegliedert, die jeweils funktionale Verantwortlichkeiten bündeln.
 
@@ -43,47 +43,47 @@ Architektonisch lässt sich das System in drei logische Ebenen unterteilen:
 
 Diese Trennung ist sowohl im Client als auch im Server konsequent umgesetzt.
 
-= Server – Interaktion der Komponenten
+== Server – Interaktion der Komponenten
 
-== ServerView, ServerPresenter und ServerViewPlatform
+=== ServerView, ServerPresenter und ServerViewPlatform
 
 Der *ServerPresenter* vermittelt zwischen Benutzeroberfläche und Serverlogik. Er verarbeitet Benutzereingaben wie Start- und Stop-Aktionen und manipuliert die View entsprechend.
 
-== ServerModel – zentrale Verarbeitungsschicht
+=== ServerModel – zentrale Verarbeitungsschicht
 
 Das *ServerModel* bündelt die gesamte fachliche Serverlogik, inklusive Netzwerkkommunikation, Request-Verarbeitung und Account-Verwaltung.
 
-== Kommunikationsschnittstelle zum Client
+=== Kommunikationsschnittstelle zum Client
 
 Die Kommunikationsschnittstelle wird durch *TCPServerSocket* und *SocketWorker* realisiert. Für jede Verbindung wird ein eigener *SocketWorker* erzeugt.
 
-== RequestRouter und RequestHandler
+=== RequestRouter und RequestHandler
 
 Eingehende Requests werden an den *RequestRouter* übergeben, der die Verarbeitung an einen passenden *RequestHandler* delegiert.
 
-== AccountManager und JSONAccountStorage
+=== AccountManager und JSONAccountStorage
 
 Die Account-Verwaltung ist im *AccountManager* gekapselt, wobei die Persistenz über den *JSONAccountStorage* in einer JSON-Datei erfolgt.
 
-= Client – Interaktion der Komponenten
+== Client – Interaktion der Komponenten
 
-== ClientView, ClientPresenter und ClientViewPlatform
+=== ClientView, ClientPresenter und ClientViewPlatform
 
 Die *ClientView* umfasst spezialisierte Oberflächen wie Login-, Chat- und FriendlistView. Die *ClientPresenter*-Komponente besteht aus Unter-Presentern, die auf Benutzeraktionen reagieren.
 
-== ClientModel – zentrale Clientlogik
+=== ClientModel – zentrale Clientlogik
 
 Das *ClientModel* enthält den `SocketClient`, `ResponseHandler` und den `ChattingManagerImpl` zur Verwaltung des lokalen Zustands.
 
-== SocketClient – Verbindung und Nachrichtenfluss
+=== SocketClient – Verbindung und Nachrichtenfluss
 
 Der *SocketClient* stellt die TCP-Verbindung her und delegiert empfangene Antworten an passende `ResponseHandler`.
 
-= Zusammenspiel zwischen Client und Server
+== Zusammenspiel zwischen Client und Server
 
 Zusammenfassend erfolgt der Ablauf über den Aufbau einer TCP-Verbindung, den Austausch von Requests und Responses sowie die anschließende Aktualisierung von Presenter und View auf beiden Seiten.
 
-= Abstraktionsebene der Diagramme
+== Abstraktionsebene der Diagramme
 
 Die Komponentendiagramme stellen bewusst eine *abstrahierte Sicht* dar, um Verantwortlichkeiten und Kommunikationsflüsse verständlich zu machen.
 
