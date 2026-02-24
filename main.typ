@@ -92,18 +92,27 @@ Die Komponentendiagramme stellen bewusst eine *abstrahierte Sicht* dar, um Veran
 In diesem Kapitel werden die im System identifizierten Entwurfsmuster detailliert beschrieben. Diese dienen der schrittweisen hierarchischen Verfeinerung der Architektur.
 
 == Creational Pattern: Factory Method
+
+#image("/assets/Factory.svg", width: 25%)
+
 Das System setzt Fabrikmuster ein, um die Instanziierung von Objekten zu zentralisieren und vom restlichen Code zu entkoppeln.
 
 - *Zentrale Handler-Erzeugung*: In den Klassen `ResponseHandlerFactory` (Client) und `RequestHandlerFactory` (Server) wird anhand eines Typs (z. B. `RequestCode`) entschieden, welcher konkrete Handler erzeugt wird. Dadurch muss die Netzwerkkomponente die konkreten Handler-Klassen nicht kennen.
 - *Abstraktion der UI-Technologie*: Die `ViewFactory` definiert eine Schnittstelle zur Erzeugung aller Fenster. Konkrete Implementierungen wie `JavaFxViewFactory` liefern plattformspezifische Objekte zurück, was den Austausch der UI-Technologie ohne Änderung der Presenter ermöglicht.
 
 == Behavioral Pattern: Observer (Event-Bus)
+
+#image("/assets/Behavioral.svg", width: 50%)
+
 Zur Kommunikation zwischen den entkoppelten Komponenten wird eine ereignisbasierte Architektur genutzt, die auf dem Google Guava `EventBus` basiert.
 
 - *Ereignisgesteuerter Nachrichtenfluss*: Wenn der `SocketClient` eine Nachricht empfängt, wird ein `ChatMessageReceivedEvent` auf den Bus gepostet.
 - *Lose Kopplung*: Komponenten wie der `ChatPresenter` registrieren sich via `@Subscribe` für spezifische Ereignisse. Der Sender benötigt keine Referenz auf den Empfänger, was die Modularität erhöht und einen „Big Ball of Mud“ verhindert.
 
 == Architectural Pattern: Model-View-Presenter (MVP)
+
+#image("/assets/Architectural.svg", width: 50%)
+
 Das System folgt dem MVP-Muster, um Präsentationslogik strikt von der Darstellung zu trennen.
 
 - *Der Presenter als Dialogkern*: Der `ChatPresenter` bildet den Dialogkern. Er steuert die Interaktionen und kommuniziert mit dem Model.
