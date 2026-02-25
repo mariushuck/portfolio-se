@@ -30,6 +30,25 @@ Das vorliegende Dokument dokumentiert die Architekturanalyse und das Re-Engineer
 
 Das analysierte System "chat-socket" ist eine in Java realisierte Client-Server-Applikation, die grundlegende Chat-Funktionalitäten wie privaten Chat, Benutzerregistrierung und Statusanzeigen bereitstellt. Technisch basiert das Projekt auf TCP-Sockets für die Netzwerkkommunikation und nutzt Java-Serialisierung sowie JSON für den Datenaustausch. Ein besonderes Merkmal ist die Unterstützung zweier unterschiedlicher UI-Technologien (JavaFX und Swing). Die Verwaltung der Abhängigkeiten und der Build-Prozess werden über Maven gesteuert.
 
+= Deployment-Diagramm – Verteilungssicht für „chat-socket“
+
+== Überblick
+Das Deployment-Diagramm beschreibt die physische Verteilung der Chat-Anwendung `chat-socket` auf verschiedene Rechner. Die Anwendung besteht aus einem Client und einem Server, die beide aus demselben Artefakt (`chatsocket.jar`) gestartet werden, jedoch in unterschiedlichen Betriebsmodi ausgeführt werden. Die Kommunikation erfolgt über eine TCP/IP-Verbindung auf Port 3393.
+
+== Knoten und Ausführungsumgebungen
+
+=== Client-Knoten
+Der Client wird auf einem Endgerät wie einem PC oder Laptop ausgeführt. Dieses Gerät wird im Deployment-Diagramm als «device» *Client* dargestellt. Auf diesem Knoten befindet sich die «executionEnvironment» *Java SE 8 Runtime*, welche die notwendige Ausführungsumgebung für die Anwendung bereitstellt. Sie umfasst die Java Virtual Machine (JVM) sowie die Standardbibliotheken, die zur Ausführung des Programms erforderlich sind. Innerhalb dieser Laufzeitumgebung wird das «artifact» `chatsocket.jar` ausgeführt. Dabei handelt es sich um die ausführbare Anwendung, die im Client-Modus mit dem Parameter `--mode=client` gestartet wird. In diesem Modus stellt die Anwendung die grafische Benutzeroberfläche sowie die gesamte Client-Logik bereit, wie beispielsweise den Verbindungsaufbau zum Server, die Benutzeranmeldung oder das Senden und Empfangen von Nachrichten.
+
+=== Server-Knoten
+Der Server wird auf einem separaten Rechner oder einem dedizierten Server-System ausgeführt. Dieser wird im Deployment-Diagramm als «device» *Server* modelliert. Wie auch beim Client befindet sich auf diesem Knoten die «executionEnvironment» *Java SE 8 Runtime*. Sie stellt die notwendige Laufzeitumgebung zur Verfügung und ermöglicht die Ausführung der serverseitigen Anwendung. Innerhalb dieser Laufzeitumgebung wird ebenfalls das «artifact» `chatsocket.jar` gestartet. Die Anwendung wird hier mit dem Parameter `--mode=server` gestartet und übernimmt damit die Rolle des zentralen Servers im System. In diesem Modus stellt sie einen TCP-Server bereit, der auf einem definierten Port auf eingehende Client-Verbindungen wartet. Darüber hinaus übernimmt der Server die Benutzerverwaltung sowie die Verarbeitung und Weiterleitung von Nachrichten zwischen den verbundenen Clients. Durch den Einsatz von Multithreading können mehrere Client-Verbindungen gleichzeitig verarbeitet werden.
+
+== Kommunikationspfad
+Zwischen Client und Server besteht eine Netzwerkverbindung, die im Deployment-Diagramm als «communicationPath» *TCP/IP Port 3393* dargestellt wird. Diese Verbindung erfolgt über das TCP/IP-Protokoll auf dem Port 3393. Der Server lauscht auf dem festgelegten Port 3393 und wartet auf eingehende Client-Verbindungen. Der Client baut über diesen Port eine TCP/IP-Verbindung zum Server auf. Über diese Verbindung werden alle Nachrichten, Statusinformationen und Benutzeranmeldungen übertragen. Die Kommunikation erfolgt über JSON-Nachrichten und Java-Objekte. Dieser Kommunikationspfad bildet die Grundlage für alle zentralen Funktionen der Anwendung, wie den Nachrichtenaustausch, die Benutzeranmeldung sowie die Übertragung von Statusinformationen.
+
+== Begründung der Modellierungsentscheidungen
+Die Verteilungssicht konzentriert sich auf die physischen Ausführungsumgebungen, die eingesetzten Artefakte sowie die Kommunikationsbeziehungen zwischen den beteiligten Systemteilen. Persistente Dateien wie `app.json` oder `user.json` werden in diesem Kontext nicht als eigene Artefakte modelliert. Dies liegt daran, dass sie lokal im Dateisystem abgelegt werden, keine eigenständigen Komponenten darstellen, nicht über das Netzwerk verteilt werden und keine eigene Ausführungsumgebung benötigen. Sie dienen lediglich als lokale Datenspeicher und sind daher für die Darstellung der Deployment-Struktur nicht relevant.
+
 = Erläuterung der Komponentendiagramme
 
 == Gesamtüberblick der Systemarchitektur
