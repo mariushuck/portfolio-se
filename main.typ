@@ -32,6 +32,8 @@ Das analysierte System "chat-socket" ist eine in Java realisierte Client-Server-
 
 = Deployment-Diagramm – Verteilungssicht für „chat-socket“
 
+#image("/assets/DeploymentDiagram.svg", width: 85%)
+
 == Überblick
 Das Deployment-Diagramm beschreibt die physische Verteilung der Chat-Anwendung `chat-socket` auf verschiedene Rechner. Die Anwendung besteht aus einem Client und einem Server, die beide aus demselben Artefakt (`chatsocket.jar`) gestartet werden, jedoch in unterschiedlichen Betriebsmodi ausgeführt werden. Die Kommunikation erfolgt über eine TCP/IP-Verbindung auf Port 3393.
 
