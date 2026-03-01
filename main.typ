@@ -12,9 +12,7 @@
   
   type-of-thesis: "Portfolioprüfung",
   at-university: true, 
-  bibliography: bibliography("sources.bib"),
   date: datetime.today(),
-  glossary: glossary-entries, 
   language: "de", 
   supervisor: (university: "Prof. Dr. Roland Schätzle"),
   university: "Duale Hochschule Baden-Württemberg",
@@ -121,38 +119,6 @@ Diese Komponente enthält keine Netzwerklogik und ist von der Kommunikationsschi
 === JSONAccountStorage (Persistenzschicht)
 Die Persistenz erfolgt über JSON-Dateien. Die Komponente JSONAccountStorage übernimmt das Laden und Speichern der Benutzerkonten. Dabei werden Serialisierungs- und Deserialisierungsmechanismen verwendet, um die Daten zwischen Objektstruktur und Datei darzustellen.
 Diese Komponente kapselt sämtliche Datei- und IO-Operationen und trennt damit Persistenz von Geschäftslogik.
-= Identifikation von Design Pattern
-
-In diesem Kapitel werden die im System identifizierten Entwurfsmuster detailliert beschrieben. Diese dienen der schrittweisen hierarchischen Verfeinerung der Architektur und gewährleisten eine saubere Trennung von Zuständigkeiten.
-
-== Creational Pattern: Factory Method
-
-#image("/assets/Factory.svg", width: 35%)
-
-Das System setzt das Fabrikmuster (Factory Method) ein, um die Instanziierung von Objekten zu zentralisieren und den aufrufenden Code von konkreten Implementierungen zu entkoppeln.
-
-- *Zentrale Handler-Erzeugung (Open-Closed Principle)*: Die Klassen `ResponseHandlerFactory` (Client) und `RequestHandlerFactory` (Server) kapseln die Logik zur Objekterzeugung. Anhand eines Typs (z. B. `RequestCode`) wird dynamisch entschieden, welcher konkrete Handler erzeugt wird. Dies erlaubt es, das System um neue Funktionen zu erweitern, ohne die bestehende Netzwerkkomponente modifizieren zu müssen.
-- *Abstraktion der UI-Technologie*: Die `ViewFactory` definiert eine abstrakte Schnittstelle zur Erzeugung aller UI-Komponenten. Die konkrete `JavaFxViewFactory` liefert plattformspezifische Objekte zurück. Da die Presenter ausschließlich gegen das Interface der Factory arbeiten, bleibt die Anwendungslogik unabhängig von der zugrunde liegenden Grafikbibliothek (z. B. JavaFX, Swing oder fiktive Web-UIs).
-
-== Behavioral Pattern: Observer (Event-Bus)
-
-#image("/assets/Behavioral.svg", width: 80%)
-
-Zur Kommunikation zwischen den entkoppelten Komponenten wird eine ereignisbasierte Architektur genutzt, die auf dem Google Guava `EventBus` basiert. Dies stellt eine moderne Implementierung des Observer-Musters dar.
-
-- *Ereignisgesteuerter Nachrichtenfluss*: Sobald der `SocketClient` ein Datenpaket empfängt, wird dieses in ein Event-Objekt (z. B. `ChatMessageReceivedEvent`) transformiert und auf den Bus gepostet. Der Sender kennt dabei weder die Anzahl noch die Art der Empfänger.
-- *Lose Kopplung und Modularität*: Komponenten wie der `ChatPresenter` registrieren sich mittels der `@Subscribe`-Annotation für spezifische Ereignisse. Diese lose Kopplung verhindert eine starre Objekt-Hierarchie (Vermeidung eines „Big Ball of Mud“) und ermöglicht es, neue Funktionalitäten (wie Logging oder Statistik-Module) einfach als weitere Subscriber hinzuzufügen, ohne den bestehenden Code zu beeinflussen.
-
-== Architectural Pattern: Model-View-Presenter (MVP)
-
-#image("/assets/Architectural.svg", width: 80%)
-
-Das System folgt dem MVP-Muster, um die Präsentationslogik strikt von der visuellen Darstellung zu trennen. Dies bietet ein Höchstmaß an Flexibilität bei der Wahl der UI-Technologie.
-
-- *Der Presenter als Dialogkern*: Der `ChatPresenter` fungiert als zentraler Koordinator. Er verarbeitet die vom Event-Bus eingehenden Daten, bereitet sie für die Anzeige auf und reagiert auf Benutzereingaben der View.
-- *Die Passive View*: Die Benutzeroberfläche ist konsequent als „Passive View“ realisiert. Das bedeutet, die View (z. B. `ChatViewImpl`) enthält keinerlei Programmlogik, sondern bietet lediglich Methoden zur Manipulation der UI-Elemente an.
-- *Technologieneutralität (Swing/JavaFX)*: Da der Presenter ausschließlich über das Interface `ChatView` kommuniziert, ist der Dialogkern vollständig von der Framework-Implementierung entkoppelt. Dies ermöglicht es, die grafische Oberfläche wahlweise mit *JavaFX* oder *Swing* umzusetzen (oder zwischen diesen zu wechseln), ohne eine einzige Zeile Code im Presenter oder im Model ändern zu müssen. 
-- *Testbarkeit*: Durch die Entkopplung kann die gesamte Dialoglogik in Unit-Tests geprüft werden, indem die View durch ein Mock-Objekt ersetzt wird. Dadurch sind automatisierte Tests ohne eine aktive grafische Oberfläche möglich.
 
 = Einblick in den Interaktionsablauf beim Versand einer Chat-Nachricht
 
@@ -175,10 +141,6 @@ ein `ForwardChatMessageEvent`-Objekt erzeugt, dem das `ChatMessage`-Objekt und d
 
  So wie der `SocketWorker` des Servers dauerhaft auf Anfragen eines Clients wartet, so wartet auch der `SocketClient`des Clients E mit der Methode `waitForIncomingMessages()` auf Antworten des Servers. Sobald eine Antwort eintrifft, wird die private Methode `handleResponse()` ausgeführt. In dieser Methode wird ähnlich wie auf der Serverseite mit der Klasse `ResponseHandlerFactory` ein neues `ResponseHandler`-Objekt erzeugt, welches mit der Methode `handle()` auf die Antwort des Servers reagiert. In diesem Fall ist es die Klasse `ChatMessageResponseHandler`, welche die Antwort verarbeitet. In dessen `handle`-Methode wird die Antwort des Servers wieder in ein `ChatMessage`-Objekt umgewandelt, um es anschließend mit dem Aufruf der Methode `processReceivedChatMessage()` an das Interface `ChattingManager` zu übergeben. Die Klasse `ChattingManagerImpl` implementiert dieses Interface und verarbeitet die Nachricht in seiner Methode `processReceivedChatMessage()`, um sie schließlich als `ChatMessageReceivedEvent` zu posten. Der `ChatPresenter` des Clients E reagiert mit seiner Methode `onChatMessageReceived()` auf dieses Event und aktualisiert die Chatoberfläche, um die neue Nachricht anzuzeigen.
 
-
-
 = Fazit
 
-Die Architekturanalyse des "chat-socket"-Systems verdeutlicht eine konsequente Trennung von Belangen (Separation of Concerns), die für ein Projekt dieser Größenordnung bemerkenswert strukturiert umgesetzt wurde. Durch die Anwendung des Model-View-Presenter (MVP)-Musters in Kombination mit dem Factory-Design-Pattern ist es den Entwicklern gelungen, eine hohe Austauschbarkeit der UI-Komponenten zu gewährleisten. Die Tatsache, dass das System nahtlos zwischen Swing und JavaFX wechseln kann, ohne die zugrunde liegende Programmlogik zu tangieren, unterstreicht die Flexibilität der Architektur.
-
-Ein wesentlicher Erfolgsfaktor für die Wartbarkeit des Systems ist der Einsatz eines ereignisbasierten Kommunikationsmodells über den Guava EventBus. Diese lose Kopplung minimiert direkte Abhängigkeiten zwischen den Komponenten und erleichtert die Erweiterbarkeit um neue Funktionen, da neue Listener (z. B. für zusätzliche Chat-Features) ohne tiefgreifende Änderungen am bestehenden Code integriert werden können.
+Die Architekturanalyse von „chat-socket“ belegt eine hohe Softwarequalität durch konsequente Schichtentrennung und Modularität. Die strikte Entkopplung von UI und Logik sowie die ereignisgesteuerte Kommunikation via Dispatcher-Architektur gewährleisten eine exzellente Wartbarkeit und Portabilität gemäß ISO 25010. Während das System funktional überzeugt, bieten die Skalierbarkeit (NIO statt Thread-per-Client) und die Ablösung der Java-Serialisierung durch modernere Protokolle wichtige Ansätze für künftige Optimierungen. Insgesamt stellt das Projekt eine robuste, sauber strukturierte Basis dar.
