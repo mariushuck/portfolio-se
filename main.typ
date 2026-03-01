@@ -20,6 +20,7 @@
   university: "Duale Hochschule Baden-Württemberg",
   university-location: "Karlsruhe",
   university-short: "DHBW",
+city: "Karlsruhe",
 )
 
 = Einleitung
@@ -51,63 +52,75 @@ Zwischen Client und Server besteht eine Netzwerkverbindung, die im Deployment-Di
 == Begründung der Modellierungsentscheidungen
 Die Verteilungssicht konzentriert sich auf die physischen Ausführungsumgebungen, die eingesetzten Artefakte sowie die Kommunikationsbeziehungen zwischen den beteiligten Systemteilen. Persistente Dateien wie `app.json` oder `user.json` werden in diesem Kontext nicht als eigene Artefakte modelliert. Dies liegt daran, dass sie lokal im Dateisystem abgelegt werden, keine eigenständigen Komponenten darstellen, nicht über das Netzwerk verteilt werden und keine eigene Ausführungsumgebung benötigen. Sie dienen lediglich als lokale Datenspeicher und sind daher für die Darstellung der Deployment-Struktur nicht relevant.
 
-= Erläuterung der Komponentendiagramme
+= Erläuterung der Komponentediagramme der Chat-Socket-Anwedung
 
-== Gesamtüberblick der Systemarchitektur
+== Überblick über die Systemarchitektur
 
-Das System ist als klassisches *Client-Server-System* mit TCP-Socket-Kommunikation aufgebaut. Sowohl Client als auch Server sind in logisch getrennte Komponenten gegliedert, die jeweils funktionale Verantwortlichkeiten bündeln.
+Die vorliegenden Komponentendiagramme beschreiben die Architektur einer Client-Server-basierten Chat-Anwendung. Das zugrundeliegende Repository implementiert eine socketbasierte Kommunikation zwischen einem Desktop-Client und einem Server. Beide Seiten sind klar strukturiert und folgen einer schichtenartigen Architektur mit klarer Trennung von Präsentation, Anwendungslogik und technischer Infrastruktur.
+Die Diagramme abstrahieren von einzelnen Klassen und fassen funktional zusammengehörige Komponenten zusammen. Dadurch entsteht ein verständliches Architekturmodell, das die wesentlichen Verantwortlichkeiten und Abhängigkeiten sichtbar macht.
 
-Architektonisch lässt sich das System in drei logische Ebenen unterteilen:
-- *View-Schicht (UI)*
-- *Presenter-Schicht (Koordination/UI-Logik)*
-- *Model-Schicht (fachliche Logik + Kommunikation)*
+Grundsätzlich besteht das System aus:
+- einer Client-Anwendung mit GUI
+- einem Server mit Request-Verarbeitung
+- einer TCP-basierten Kommunikationsschnittstelle
+- einer JSON-basierten Persistenz für Benutzerkonten
 
-Diese Trennung ist sowohl im Client als auch im Server konsequent umgesetzt.
+== Client Architektur
 
-== Server – Interaktion der Komponenten
+#image("/assets/ClientArchitecture.jpg", width: 100%)
 
-=== ServerView, ServerPresenter und ServerViewPlatform
+=== ClientView (Präsentationsschicht)
 
-Der *ServerPresenter* vermittelt zwischen Benutzeroberfläche und Serverlogik. Er verarbeitet Benutzereingaben wie Start- und Stop-Aktionen und manipuliert die View entsprechend.
+Die ClientView-Komponente umfasst mehrere spezialisierte Views. Diese Komponenten sind ausschließlich für die Darstellung zuständig. Sie enthalten keine Geschäftslogik, sondern stellen Benutzereingaben bereit und zeigen Daten an. Technisch basieren sie auf einer GUI-Plattform (abstrahiert als ClientViewPlatform).
+Die View kennt keine Netzwerkdetails und keine Geschäftslogik. Sie kommuniziert ausschließlich über definierte Schnittstellen mit dem Presenter.
 
-=== ServerModel – zentrale Verarbeitungsschicht
+=== ClientPresenter (Vermittlerschichte)
 
-Das *ServerModel* bündelt die gesamte fachliche Serverlogik, inklusive Netzwerkkommunikation, Request-Verarbeitung und Account-Verwaltung.
+Die Presenter-Komponenten (z. B. ChatPresenter, LoginPresenter, ProfilePresenter) koordinieren Benutzerinteraktionen. 
+Sie verarbeiten Benutzereingaben und manipulieren die View.
+Beispielsweise ruft der ChatPresenter beim Senden einer Nachricht den ChattingManager auf, welcher die Nachricht technisch vorbereitet und über den SocketClient versendet.
+Die Presenter-Schicht vermittelt somit zwischen GUI und Anwendungslogik.
 
-=== Kommunikationsschnittstelle zum Client
+=== ClientModel (Anwendungslogik)
 
-Die Kommunikationsschnittstelle wird durch *TCPServerSocket* und *SocketWorker* realisiert. Für jede Verbindung wird ein eigener *SocketWorker* erzeugt.
+Das ClientModel enthält die zentrale Client-Logik. Der SocketClient ist die technische Schnittstelle zum Server. Er sendet Request-Objekte, empfängt Response-Objekte und delegiert eingehende Responses an passende Handler
+Er kapselt sämtliche Netzwerkkommunikation (TCP, Streams) und trennt die restliche Client-Logik von technischen Details.
 
-=== RequestRouter und RequestHandler
+Für jede Response-Art existiert ein spezialisierter Handler (z. B. LoginResponseHandler, ChatMessageResponseHandler). Hier werden DTO-Daten extrahiert, das Model aktualisiert und Server-Responses interpretiert. Dadurch wird eine saubere Trennung der Response-Verarbeitung erreicht.
 
-Eingehende Requests werden an den *RequestRouter* übergeben, der die Verarbeitung an einen passenden *RequestHandler* delegiert.
+Ein weiter Bestandteil ist der Chattingmanager. Er ist ist eine zentrale Koordinationskomponente für Chat-Nachrichten und verbindet falchlichen Zustand mit technischer Kommunikation. Dafür wird er im ChatMessageResponseHandler implementiert. Zusätzlich steuert die Komponente den ChatPresenter.
 
-=== AccountManager und JSONAccountStorage
+ManagedFriends und UserProfile verwalten lokale Anwendungsdaten wie Freundeslisten, Profilinformationen, aktuellen Benutzerzustand. Sie enthalten keine Netzwerk- oder GUI-Logik.
 
-Die Account-Verwaltung ist im *AccountManager* gekapselt, wobei die Persistenz über den *JSONAccountStorage* in einer JSON-Datei erfolgt.
 
-== Client – Interaktion der Komponenten
 
-=== ClientView, ClientPresenter und ClientViewPlatform
+== Server Architektur
+#image("/assets/ServerArchitecture.jpg", width: 100%)
+=== ServerView (Präsentationsschicht)
+Die ServerView-Komponente umfasst die MainView und die LogView.�Diese Komponenten dienen ausschließlich der Darstellung und Steuerung des Servers. Über die Benutzeroberfläche kann der Server gestartet und gestoppt sowie Log-Ausgaben eingesehen werden.
+Die View enthält keine Geschäftslogik und verarbeitet keine Netzwerkkommunikation. Sie kommuniziert ausschließlich über definierte Schnittstellen mit dem ServerPresenter. Die technische GUI-Plattform wird dabei über die Komponente ServerViewPlatform abstrahiert.
 
-Die *ClientView* umfasst spezialisierte Oberflächen wie Login-, Chat- und FriendlistView. Die *ClientPresenter*-Komponente besteht aus Unter-Presentern, die auf Benutzeraktionen reagieren.
+=== ServerPresenter (Vermittlerschicht)
+Der ServerPresenter übernimmt die Koordination zwischen Benutzeroberfläche und Serverlogik. Er verarbeitet Benutzereingaben wie Start- und Stop-Befehle und stößt entsprechende Aktionen im System an.
+Beim Starten des Servers wird beispielsweise der SocketWorker initialisiert und die Netzwerkkommunikation aktiviert. Beim Stoppen werden entsprechende Shutdown-Mechanismen ausgelöst.
+Die Presenter-Schicht vermittelt somit zwischen GUI und technischer Infrastruktur und kapselt die Steuerungslogik des Servers.
 
-=== ClientModel – zentrale Clientlogik
+=== ServerModel (Anwendungs- und Verarbeitungsschicht)
+Das ServerModel enthält die zentrale Logik zur Verarbeitung eingehender Client-Anfragen.
+Ein zentraler Bestandteil ist der SocketWorker. Diese Komponente verarbeitet eingehende Verbindungen und liest Requests von Clients. Sie stellt damit die technische Kommunikationsschnittstelle zum Client dar und kapselt sämtliche TCP-basierte Netzwerkoperationen.
 
-Das *ClientModel* enthält den `SocketClient`, `ResponseHandler` und den `ChattingManagerImpl` zur Verwaltung des lokalen Zustands.
+Eingehende Requests werden an den RequestRouter weitergeleitet. Der RequestRouter analysiert den Request-Typ und delegiert die Verarbeitung an den passenden RequestHandler.
 
-=== SocketClient – Verbindung und Nachrichtenfluss
+Für jede Request-Art existiert ein spezialisierter Handler (z. B. LoginRequestHandler, RegisterRequestHandler, ChatMessageRequestHandler). Diese Komponenten interpretieren die eingehenden Request-Daten, führen die entsprechende fachliche Operation aus und erzeugen eine passende Response. Anschließend wird die Response über den SocketWorker an den Client zurückgesendet.
 
-Der *SocketClient* stellt die TCP-Verbindung her und delegiert empfangene Antworten an passende `ResponseHandler`.
+Dadurch entsteht eine klar strukturierte Dispatch-Architektur, bei der neue Request-Typen durch Hinzufügen eines weiteren Handlers ergänzt werden können.
 
-== Zusammenspiel zwischen Client und Server
+Der AccountManager kapselt die fachliche Logik für die Verwaltung von Benutzerkonten. Dazu gehören zum Beispiel die Registrierung neuer Benutzer und Login-Validierung.
+Diese Komponente enthält keine Netzwerklogik und ist von der Kommunikationsschicht entkoppelt. Sie stellt die eigentliche Geschäftslogik des Servers dar.
 
-Zusammenfassend erfolgt der Ablauf über den Aufbau einer TCP-Verbindung, den Austausch von Requests und Responses sowie die anschließende Aktualisierung von Presenter und View auf beiden Seiten.
-
-== Abstraktionsebene der Diagramme
-
-Die Komponentendiagramme stellen bewusst eine *abstrahierte Sicht* dar, um Verantwortlichkeiten und Kommunikationsflüsse verständlich zu machen.
-
+=== JSONAccountStorage (Persistenzschicht)
+Die Persistenz erfolgt über JSON-Dateien. Die Komponente JSONAccountStorage übernimmt das Laden und Speichern der Benutzerkonten. Dabei werden Serialisierungs- und Deserialisierungsmechanismen verwendet, um die Daten zwischen Objektstruktur und Datei darzustellen.
+Diese Komponente kapselt sämtliche Datei- und IO-Operationen und trennt damit Persistenz von Geschäftslogik.
 = Identifikation von Design Pattern
 
 In diesem Kapitel werden die im System identifizierten Entwurfsmuster detailliert beschrieben. Diese dienen der schrittweisen hierarchischen Verfeinerung der Architektur und gewährleisten eine saubere Trennung von Zuständigkeiten.
